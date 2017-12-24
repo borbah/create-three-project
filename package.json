@@ -1,0 +1,46 @@
+{
+  "name": "create-three-project",
+  "version": "1.0.0",
+  "description": "ES6 boilerplate project for three.js library",
+  "main": "gulpfile.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/borbah/create-three-project.git"
+  },
+  "keywords": [
+    "threejs"
+  ],
+  "author": "Adam Romanski",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/borbah/create-three-project/issues"
+  },
+  "homepage": "https://github.com/borbah/create-three-project#readme",
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babelify": "^8.0.0",
+    "browserify": "^14.5.0",
+    "browsersync": "0.0.1-security",
+    "event-stream": "^3.3.4",
+    "glob": "^7.1.2",
+    "gulp": "^3.9.1",
+    "gulp-autoprefixer": "^4.0.0",
+    "gulp-clean-css": "^3.9.0",
+    "gulp-notify": "^3.0.0",
+    "gulp-plumber": "^1.1.0",
+    "gulp-rename": "^1.2.2",
+    "gulp-sass": "^3.1.0",
+    "gulp-sourcemaps": "^2.6.2",
+    "gulp-streamify": "^1.0.2",
+    "gulp-uglify": "^3.0.0",
+    "gulp-webserver": "^0.9.1",
+    "vinyl-source-stream": "^2.0.0"
+  },
+  "dependencies": {
+    "three": "^0.89.0"
+  }
+}
