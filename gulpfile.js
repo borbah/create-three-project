@@ -16,8 +16,6 @@ const notify = require('gulp-notify');
 const scssSrc = 'scss/main.scss';
 const cssPub = 'css/';
 
-
-
 gulp.task('scss', function () {
     return gulp.src(scssSrc)
 
@@ -46,6 +44,24 @@ gulp.task('build', function(done) {
 	});
 });
 
+gulp.task('devbuild', function(done) {
+	glob('./js/index.js', function(err, files) {
+		if(err) done(err);
+
+		var tasks = files.map(function(entry) {
+			return browserify({ entries: [entry] })
+				.transform('babelify', {presets: ['babel-preset-env']})
+				.bundle()
+				.pipe(source(entry))
+				.pipe(rename({
+					extname: '.bundle.js'
+				}))
+				.pipe(gulp.dest('./dist/'));
+		});
+		es.merge(tasks).on('end', done);
+	});
+});
+
 gulp.task('serve', function() {
 	gulp.src('./')
 		.pipe(webserver({
@@ -57,10 +73,10 @@ gulp.task('serve', function() {
 		}));
 });
 
-gulp.task('watch', ['scss', 'build', 'serve'], function () {
-	gulp.watch('./js/**/*.js', ['build']);
+gulp.task('watch', ['scss', 'devbuild', 'serve'], function () {
+	gulp.watch('./js/**/*.js', ['devbuild']);
 	gulp.watch('./scss/**/*.scss', ['scss']);
-	gulp.watch('./index.html', ['build']);
+	gulp.watch('./index.html', ['devbuild']);
 });
 
 gulp.task('run', ['watch']);
