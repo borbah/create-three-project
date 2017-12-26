@@ -56,7 +56,6 @@ var Animation = exports.Animation = function () {
         var y = Math.cos(angle) * this.radius;
         var size = 1;
         var color = this.colors.white;
-        z += 2;
 
         this.particles.push(new _particle.Particle({
           group: this.particleGroup,
@@ -73,9 +72,8 @@ var Animation = exports.Animation = function () {
         this.radius += this.radiusGrowth;
       }
     }
-    this.particleGroup.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI / 2));
-    this.particleGroup.applyMatrix(new THREE.Matrix4().makeRotationY(Math.PI / 2));
-    this.particleGroup.position.y = 50;
+    this.particleGroup.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI / 3));
+    this.particleGroup.position.y = 40;
     this.loader.scene.add(this.particleGroup);
   }
 
@@ -88,14 +86,22 @@ var Animation = exports.Animation = function () {
       this.pointLightTwo = new THREE.PointLight(this.colors.blue, 3, 100, 1);
       this.pointLightTwo.position.set(0, -80, 0);
 
-      this.ambient = new THREE.AmbientLight(this.colors.white, .2);
+      this.ambient = new THREE.AmbientLight(this.colors.white, 1);
 
       this.loader.scene.add(this.pointLightOne, this.pointLightTwo, this.ambient);
     }
   }, {
+    key: 'updateParticles',
+    value: function updateParticles() {
+      var i = this.particles.length;
+      while (i--) {
+        this.particles[i].update();
+      }
+    }
+  }, {
     key: 'update',
     value: function update() {
-      this.particleGroup.rotation.z += 0.01;
+      this.updateParticles();
     }
   }]);
 
@@ -172,9 +178,9 @@ var Loader = exports.Loader = function () {
       this.camera = new THREE.PerspectiveCamera(35, 0, 0.0001, 10000);
 
       this.camera.position.x = 0;
-      this.camera.position.y = 30;
-      this.camera.position.z = 200;
-      this.camera.rotateX(-0.25);
+      this.camera.position.y = 0;
+      this.camera.position.z = 150;
+      this.camera.rotateX(0.25);
     }
   }, {
     key: 'setupRenderer',
@@ -215,6 +221,16 @@ var Loader = exports.Loader = function () {
   }, {
     key: 'update',
     value: function update() {
+      this.deltaTimeSeconds = this.clock.getDelta();
+      if (this.diffTime) {
+        this.deltaTimeSeconds -= this.diffTime;
+        this.diffTime = 0;
+      }
+      this.deltaTimeSeconds *= this.timescale;
+      this.deltaTimeMilliseconds = this.deltaTimeSeconds * 1000;
+      this.deltaTimeNormal = this.deltaTimeMilliseconds / (1000 / 60);
+      this.elapsedMilliseconds += this.deltaTimeMilliseconds;
+
       this.animation.update();
     }
   }, {
@@ -303,6 +319,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Particle = undefined;
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 var _particleBase = require('./particle-base');
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -319,11 +337,24 @@ var Particle = exports.Particle = function (_ParticleBase) {
 
     var _this = _possibleConstructorReturn(this, (Particle.__proto__ || Object.getPrototypeOf(Particle)).call(this, config, animation, loader));
 
+    _this.loader = loader;
+
     _this.angle = config.angle;
-    _this.radiusBase = config.radiusBase;
+    _this.radiusBase = config.radius;
     _this.sizeBase = config.size;
     return _this;
   }
+
+  _createClass(Particle, [{
+    key: 'update',
+    value: function update() {
+      this.angle -= Math.cos(this.loader.elapsedMilliseconds * 0.0025 - this.radiusBase * 0.15) * 0.02 * this.loader.deltaTimeNormal;
+      this.mesh.position.y = Math.cos(this.angle) * this.radiusBase / 3;
+      this.mesh.position.x = Math.cos(this.angle) * this.radiusBase / 3;
+      this.mesh.position.y = Math.sin(this.angle) * this.radiusBase / 3;
+      this.mesh.position.z = Math.cos(this.loader.elapsedMilliseconds * 0.0005 - this.radiusBase * 0.3) * 30;
+    }
+  }]);
 
   return Particle;
 }(_particleBase.ParticleBase);

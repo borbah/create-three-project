@@ -38,9 +38,9 @@ export class Loader {
     this.camera = new THREE.PerspectiveCamera(35, 0, 0.0001, 10000);
 
     this.camera.position.x = 0;
-    this.camera.position.y = 30;
-    this.camera.position.z = 200;
-    this.camera.rotateX(-0.25);
+    this.camera.position.y = 0;
+    this.camera.position.z = 150;
+    this.camera.rotateX(0.25);
   }
 
   setupRenderer() {
@@ -72,6 +72,16 @@ export class Loader {
   }
 
   update() {
+    this.deltaTimeSeconds = this.clock.getDelta();
+    if(this.diffTime) {
+      this.deltaTimeSeconds -= this.diffTime;
+      this.diffTime = 0;
+    }
+    this.deltaTimeSeconds *= this.timescale;
+    this.deltaTimeMilliseconds = this.deltaTimeSeconds * 1000;
+    this.deltaTimeNormal = this.deltaTimeMilliseconds / (1000 / 60);
+    this.elapsedMilliseconds += this.deltaTimeMilliseconds;
+
     this.animation.update();
   }
 

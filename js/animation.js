@@ -37,7 +37,6 @@ export class Animation {
         let y = Math.cos(angle) * this.radius;
         let size = 1;
         let color = this.colors.white;
-        z += 2;
 
         this.particles.push(new Particle({
           group: this.particleGroup,
@@ -54,9 +53,8 @@ export class Animation {
         this.radius += this.radiusGrowth;
       }
     }
-    this.particleGroup.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI/2));
-    this.particleGroup.applyMatrix(new THREE.Matrix4().makeRotationY(Math.PI/2));
-    this.particleGroup.position.y = 50;
+    this.particleGroup.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI/3));
+    this.particleGroup.position.y = 40;
     this.loader.scene.add(this.particleGroup);
   }
 
@@ -67,12 +65,20 @@ export class Animation {
     this.pointLightTwo = new THREE.PointLight(this.colors.blue, 3, 100, 1);
     this.pointLightTwo.position.set(0, -80, 0);
 
-    this.ambient = new THREE.AmbientLight(this.colors.white, .2);
+    this.ambient = new THREE.AmbientLight(this.colors.white, 1);
 
     this.loader.scene.add(this.pointLightOne, this.pointLightTwo, this.ambient);
   }
 
-  update() {
-    this.particleGroup.rotation.z += 0.01;
+  updateParticles() {
+    let i = this.particles.length;
+    while(i--) {
+      this.particles[i].update();
+    }
   }
+
+  update() {
+    this.updateParticles();
+  }
+
 }
