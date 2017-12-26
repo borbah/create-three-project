@@ -8,6 +8,9 @@ export class Loader {
       container: document.querySelector('.app'),
     }
 
+    this.camera = null;
+
+    this.setupTime();
     this.setupScene();
     this.setupCamera();
     this.setupRenderer();
@@ -15,21 +18,29 @@ export class Loader {
     this.onResize();
     this.animation = new Animation(this);
 
-    this.box = this.animation.box;
-
     this.loop();
   }
 
-  setupScene() {    
+  setupTime() {
+    this.timescale = 1;
+    this.clock = new THREE.Clock();
+    this.deltaTimeSeconds = this.clock.getDelta() * this.timescale;
+    this.deltaTimeMilliseconds = this.deltaTimeSeconds * 1000;
+    this.deltaTimeNormal = this.deltaTimeMilliseconds / (1000 / 60);
+    this.elapsedMilliseconds = 0;
+  }
+
+  setupScene() {
     this.scene = new THREE.Scene();
   }
 
   setupCamera() {
-    this.camera = new THREE.PerspectiveCamera(100, 0, 0.0001, 10000);
+    this.camera = new THREE.PerspectiveCamera(35, 0, 0.0001, 10000);
 
     this.camera.position.x = 0;
-    this.camera.position.y = 10;
-    this.camera.position.z = 200;
+    this.camera.position.y = 0;
+    this.camera.position.z = 150;
+    this.camera.rotateX(0.25);
   }
 
   setupRenderer() {
@@ -45,25 +56,38 @@ export class Loader {
   }
 
   onResize() {
-		this.width = window.innerWidth;
-		this.height = window.innerHeight;
-		this.dpr = window.devicePixelRatio > 1 ? 2 : 1
+    this.width = window.innerWidth;
+    this.height = window.innerHeight;
+    this.dpr = window.devicePixelRatio > 1 ? 2 : 1;
 
-		this.camera.aspect = this.width / this.height;
-		this.camera.updateProjectionMatrix();
+    this.camera.aspect = this.width / this.height;
+    this.camera.updateProjectionMatrix();
 
-		this.renderer.setPixelRatio(this.dpr);
-		this.renderer.setSize(this.width, this.height);
-	}
+    this.renderer.setPixelRatio(this.dpr);
+    this.renderer.setSize(this.width, this.height);
+  }
 
   render() {
     this.renderer.render(this.scene, this.camera);
   }
 
+  update() {
+    this.deltaTimeSeconds = this.clock.getDelta();
+    if(this.diffTime) {
+      this.deltaTimeSeconds -= this.diffTime;
+      this.diffTime = 0;
+    }
+    this.deltaTimeSeconds *= this.timescale;
+    this.deltaTimeMilliseconds = this.deltaTimeSeconds * 1000;
+    this.deltaTimeNormal = this.deltaTimeMilliseconds / (1000 / 60);
+    this.elapsedMilliseconds += this.deltaTimeMilliseconds;
+
+    this.animation.update();
+  }
+
   loop() {
+    this.update();
     this.render();
-    this.box.mesh.rotation.x += 0.01;
-    this.box.mesh.rotation.y += 0.02;
     this.raf = window.requestAnimationFrame(() => this.loop());
   }
 

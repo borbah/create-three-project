@@ -2,7 +2,7 @@
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
-    value: true
+  value: true
 });
 exports.Animation = undefined;
 
@@ -12,69 +12,103 @@ var _three = require('three');
 
 var THREE = _interopRequireWildcard(_three);
 
-var _loader = require('./loader');
+var _particle = require('./particle');
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Animation = exports.Animation = function () {
-    function Animation(loader) {
-        _classCallCheck(this, Animation);
+  function Animation(loader) {
+    _classCallCheck(this, Animation);
 
-        this.colors = {
-            red: 0xf25346,
-            white: 0xd8d0d1,
-            brown: 0x59332e,
-            pink: 0xF5986E,
-            brownDark: 0x23190f,
-            blue: 0x68c3c0
-        };
+    this.loader = loader;
 
-        this.box = null;
+    this.colors = {
+      white: 0xd8d0d1,
+      blue: 0x68c3c0
+    };
 
-        this.loader = loader;
-        this.scene = this.loader.scene;
+    // Add lights to the scene
+    this.createLights();
 
-        this.createBox();
-        this.createLights();
+    // Set basic geometry variables for particles
+    this.sphereGeometry = new THREE.SphereBufferGeometry(1, 16, 16);
+    this.boxGeometry = new THREE.BoxBufferGeometry(1, 1, 1);
+    this.center = new THREE.Vector3();
+
+    // Set base for particles
+    this.particles = [];
+    this.particleGroup = new THREE.Object3D();
+    this.particleGroup.scale.set(0.001, 0.001, 0.001);
+
+    this.rings = 8;
+    this.radius = 0;
+    this.radiusGrowth = .2;
+
+    for (var i = 0; i < this.rings; i++) {
+      var count = i === 0 ? 1 : 1 + Math.ceil(i * 20);
+      var z = 0;
+
+      for (var j = 0; j < count; j++) {
+        var angle = j / count * Math.PI * 4;
+        var x = Math.sin(angle) * this.radius;
+        var y = Math.cos(angle) * this.radius;
+        var size = 1;
+        var color = this.colors.white;
+
+        this.particles.push(new _particle.Particle({
+          group: this.particleGroup,
+          x: x,
+          y: y,
+          z: z,
+          size: size,
+          radius: this.radius,
+          angle: angle,
+          color: color,
+          opacity: 1
+        }, this, this.loader));
+
+        this.radius += this.radiusGrowth;
+      }
     }
+    this.particleGroup.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI / 3));
+    this.particleGroup.position.y = 40;
+    this.loader.scene.add(this.particleGroup);
+  }
 
-    _createClass(Animation, [{
-        key: 'createLights',
-        value: function createLights() {
-            this.hemisphereLight = new THREE.HemisphereLight(0xaaaaaa, 0x000000, .9);
-            this.shadowLight = new THREE.DirectionalLight(0xffffff, .9);
-            this.ambientLight = new THREE.AmbientLight(0xdc8874, .5);
+  _createClass(Animation, [{
+    key: 'createLights',
+    value: function createLights() {
+      this.pointLightOne = new THREE.PointLight(this.colors.blue, 2, 50, 1);
+      this.pointLightOne.position.set(0, 0, 0);
 
-            this.shadowLight.position.set(0, 150, 50);
-            this.shadowLight.castShadow = true;
+      this.pointLightTwo = new THREE.PointLight(this.colors.blue, 3, 100, 1);
+      this.pointLightTwo.position.set(0, -80, 0);
 
-            this.scene.add(this.shadowLight, this.ambientLight, this.hemisphereLight);
-        }
-    }, {
-        key: 'Box',
-        value: function Box(setColor) {
-            this.geometry = new THREE.BoxGeometry(50, 50, 50);
-            this.material = new THREE.MeshPhongMaterial({
-                color: setColor,
-                flatShading: true
-            });
-            this.mesh = new THREE.Mesh(this.geometry, this.material);
-            this.mesh.receiveShadow = true;
-        }
-    }, {
-        key: 'createBox',
-        value: function createBox() {
-            this.box = new this.Box(this.colors.blue);
-            this.scene.add(this.box.mesh);
-        }
-    }]);
+      this.ambient = new THREE.AmbientLight(this.colors.white, 1);
 
-    return Animation;
+      this.loader.scene.add(this.pointLightOne, this.pointLightTwo, this.ambient);
+    }
+  }, {
+    key: 'updateParticles',
+    value: function updateParticles() {
+      var i = this.particles.length;
+      while (i--) {
+        this.particles[i].update();
+      }
+    }
+  }, {
+    key: 'update',
+    value: function update() {
+      this.updateParticles();
+    }
+  }]);
+
+  return Animation;
 }();
 
-},{"./loader":3,"three":4}],2:[function(require,module,exports){
+},{"./particle":5,"three":6}],2:[function(require,module,exports){
 'use strict';
 
 var _loader = require('./loader');
@@ -110,6 +144,9 @@ var Loader = exports.Loader = function () {
       container: document.querySelector('.app')
     };
 
+    this.camera = null;
+
+    this.setupTime();
     this.setupScene();
     this.setupCamera();
     this.setupRenderer();
@@ -117,12 +154,20 @@ var Loader = exports.Loader = function () {
     this.onResize();
     this.animation = new Animation(this);
 
-    this.box = this.animation.box;
-
     this.loop();
   }
 
   _createClass(Loader, [{
+    key: 'setupTime',
+    value: function setupTime() {
+      this.timescale = 1;
+      this.clock = new THREE.Clock();
+      this.deltaTimeSeconds = this.clock.getDelta() * this.timescale;
+      this.deltaTimeMilliseconds = this.deltaTimeSeconds * 1000;
+      this.deltaTimeNormal = this.deltaTimeMilliseconds / (1000 / 60);
+      this.elapsedMilliseconds = 0;
+    }
+  }, {
     key: 'setupScene',
     value: function setupScene() {
       this.scene = new THREE.Scene();
@@ -130,11 +175,12 @@ var Loader = exports.Loader = function () {
   }, {
     key: 'setupCamera',
     value: function setupCamera() {
-      this.camera = new THREE.PerspectiveCamera(100, 0, 0.0001, 10000);
+      this.camera = new THREE.PerspectiveCamera(35, 0, 0.0001, 10000);
 
       this.camera.position.x = 0;
-      this.camera.position.y = 10;
-      this.camera.position.z = 200;
+      this.camera.position.y = 0;
+      this.camera.position.z = 150;
+      this.camera.rotateX(0.25);
     }
   }, {
     key: 'setupRenderer',
@@ -173,13 +219,27 @@ var Loader = exports.Loader = function () {
       this.renderer.render(this.scene, this.camera);
     }
   }, {
+    key: 'update',
+    value: function update() {
+      this.deltaTimeSeconds = this.clock.getDelta();
+      if (this.diffTime) {
+        this.deltaTimeSeconds -= this.diffTime;
+        this.diffTime = 0;
+      }
+      this.deltaTimeSeconds *= this.timescale;
+      this.deltaTimeMilliseconds = this.deltaTimeSeconds * 1000;
+      this.deltaTimeNormal = this.deltaTimeMilliseconds / (1000 / 60);
+      this.elapsedMilliseconds += this.deltaTimeMilliseconds;
+
+      this.animation.update();
+    }
+  }, {
     key: 'loop',
     value: function loop() {
       var _this2 = this;
 
+      this.update();
       this.render();
-      this.box.mesh.rotation.x += 0.01;
-      this.box.mesh.rotation.y += 0.02;
       this.raf = window.requestAnimationFrame(function () {
         return _this2.loop();
       });
@@ -189,7 +249,117 @@ var Loader = exports.Loader = function () {
   return Loader;
 }();
 
-},{"three":4}],4:[function(require,module,exports){
+},{"three":6}],4:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.ParticleBase = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _three = require('three');
+
+var THREE = _interopRequireWildcard(_three);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var ParticleBase = exports.ParticleBase = function () {
+  function ParticleBase(config, animation, loader) {
+    _classCallCheck(this, ParticleBase);
+
+    this.animation = animation;
+    this.loader = loader;
+
+    this.group = config.group;
+    this.x = config.x;
+    this.y = config.y;
+    this.z = config.z;
+    this.size = config.size;
+    this.color = config.color;
+    this.opacity = config.opacity;
+
+    this.createMesh();
+  }
+
+  _createClass(ParticleBase, [{
+    key: 'createMesh',
+    value: function createMesh() {
+      this.geometry = this.animation.sphereGeometry;
+      this.random = Math.ceil(Math.random() * 30);
+
+      this.material = new THREE.MeshPhongMaterial({
+        color: this.color,
+        transparent: true,
+        opacity: this.opacity,
+        flatShading: true,
+        precision: 'lowp'
+      });
+
+      this.mesh = new THREE.Mesh(this.geometry, this.material);
+      this.mesh.receiveShadow = true;
+
+      this.mesh.position.set(this.x, this.y, this.z);
+      this.mesh.scale.set(this.size, this.size, this.size);
+      this.group.add(this.mesh);
+    }
+  }]);
+
+  return ParticleBase;
+}();
+
+},{"three":6}],5:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Particle = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _particleBase = require('./particle-base');
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Particle = exports.Particle = function (_ParticleBase) {
+  _inherits(Particle, _ParticleBase);
+
+  function Particle(config, animation, loader) {
+    _classCallCheck(this, Particle);
+
+    var _this = _possibleConstructorReturn(this, (Particle.__proto__ || Object.getPrototypeOf(Particle)).call(this, config, animation, loader));
+
+    _this.loader = loader;
+
+    _this.angle = config.angle;
+    _this.radiusBase = config.radius;
+    _this.sizeBase = config.size;
+    return _this;
+  }
+
+  _createClass(Particle, [{
+    key: 'update',
+    value: function update() {
+      this.angle -= Math.cos(this.loader.elapsedMilliseconds * 0.0025 - this.radiusBase * 0.15) * 0.02 * this.loader.deltaTimeNormal;
+      this.mesh.position.y = Math.cos(this.angle) * this.radiusBase / 3;
+      this.mesh.position.x = Math.cos(this.angle) * this.radiusBase / 3;
+      this.mesh.position.y = Math.sin(this.angle) * this.radiusBase / 3;
+      this.mesh.position.z = Math.cos(this.loader.elapsedMilliseconds * 0.0005 - this.radiusBase * 0.3) * 30;
+    }
+  }]);
+
+  return Particle;
+}(_particleBase.ParticleBase);
+
+},{"./particle-base":4}],6:[function(require,module,exports){
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 	typeof define === 'function' && define.amd ? define(['exports'], factory) :
