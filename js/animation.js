@@ -1,49 +1,78 @@
 import * as THREE from 'three';
-import { Loader } from './loader';
+import { Particle } from './particle';
 
 export class Animation {
-    constructor(loader) {
-        this.colors = {
-            red: 0xf25346,
-            white: 0xd8d0d1,
-            brown: 0x59332e,
-            pink: 0xF5986E,
-            brownDark: 0x23190f,
-            blue: 0x68c3c0
-        };
+  constructor(loader) {
+    this.loader = loader;
 
-        this.box = null;
+    this.colors = {
+      white: 0xd8d0d1,
+      blue: 0x68c3c0,
+    };
 
-        this.loader = loader;
-        this.scene = this.loader.scene;
-        
-        this.createBox();
-        this.createLights();
+    // Add lights to the scene
+    this.createLights();
+
+    // Set basic geometry variables for particles
+    this.sphereGeometry = new THREE.SphereBufferGeometry(1, 16, 16);
+    this.boxGeometry = new THREE.BoxBufferGeometry(1, 1, 1);
+    this.center = new THREE.Vector3();
+
+    // Set base for particles
+    this.particles = [];
+    this.particleGroup = new THREE.Object3D();
+    this.particleGroup.scale.set(0.001, 0.001, 0.001);
+
+    this.rings = 8;
+    this.radius = 0;
+    this.radiusGrowth = .2;
+
+    for(let i = 0; i < this.rings; i++) {
+      let count = i === 0 ? 1 : 1 + Math.ceil(i * 20);
+      let z = 0;
+
+      for(let j = 0; j < count; j++) {
+        let angle = (j / count) * Math.PI * 4;
+        let x = Math.sin(angle) * this.radius;
+        let y = Math.cos(angle) * this.radius;
+        let size = 1;
+        let color = this.colors.white;
+        z += 2;
+
+        this.particles.push(new Particle({
+          group: this.particleGroup,
+          x: x,
+          y: y,
+          z: z,
+          size: size,
+          radius: this.radius,
+          angle: angle,
+          color: color,
+          opacity: 1,
+        }, this, this.loader));
+
+        this.radius += this.radiusGrowth;
+      }
     }
+    this.particleGroup.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI/2));
+    this.particleGroup.applyMatrix(new THREE.Matrix4().makeRotationY(Math.PI/2));
+    this.particleGroup.position.y = 50;
+    this.loader.scene.add(this.particleGroup);
+  }
 
-    createLights() {
-        this.hemisphereLight = new THREE.HemisphereLight(0xaaaaaa, 0x000000, .9);
-        this.shadowLight = new THREE.DirectionalLight(0xffffff, .9);
-        this.ambientLight = new THREE.AmbientLight(0xdc8874, .5);
+  createLights() {
+    this.pointLightOne = new THREE.PointLight(this.colors.blue, 2, 50, 1);
+    this.pointLightOne.position.set(0, 0, 0);
 
-        this.shadowLight.position.set(0,150,50);
-        this.shadowLight.castShadow = true;
+    this.pointLightTwo = new THREE.PointLight(this.colors.blue, 3, 100, 1);
+    this.pointLightTwo.position.set(0, -80, 0);
 
-        this.scene.add(this.shadowLight, this.ambientLight, this.hemisphereLight);
-    }
+    this.ambient = new THREE.AmbientLight(this.colors.white, .2);
 
-    Box(setColor) {
-        this.geometry = new THREE.BoxGeometry(50,50,50);
-        this.material = new THREE.MeshPhongMaterial({
-            color: setColor,
-            flatShading: true,
-        });
-        this.mesh = new THREE.Mesh(this.geometry, this.material);
-        this.mesh.receiveShadow = true;
-    }
+    this.loader.scene.add(this.pointLightOne, this.pointLightTwo, this.ambient);
+  }
 
-    createBox() {
-        this.box = new this.Box(this.colors.blue);
-        this.scene.add(this.box.mesh);
-    }
+  update() {
+    this.particleGroup.rotation.z += 0.01;
+  }
 }
