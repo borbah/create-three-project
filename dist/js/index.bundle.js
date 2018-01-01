@@ -26,10 +26,13 @@ var Animation = exports.Animation = function () {
 
     this.colors = {
       white: 0xd8d0d1,
-      blue: 0x68c3c0
+      blue: 0xf49542
     };
 
     // Add lights to the scene
+    this.pointLightOne = null;
+    this.pointLightTwo = null;
+    this.lightsPivot = new THREE.Group();
     this.createLights();
 
     // Set basic geometry variables for particles
@@ -40,31 +43,34 @@ var Animation = exports.Animation = function () {
     // Set base for particles
     this.particles = [];
     this.particleGroup = new THREE.Object3D();
-    this.particleGroup.scale.set(0.001, 0.001, 0.001);
+    this.particleGroup.scale.set(0.1, 0.1, 0.1);
 
-    this.rings = 8;
+    this.count = 800;
     this.radius = 0;
     this.radiusGrowth = .2;
 
-    for (var i = 0; i < this.rings; i++) {
-      var count = i === 0 ? 1 : 1 + Math.ceil(i * 20);
-      var z = 0;
+    for (var i = 0; i < this.count; i++) {
+      this.theta = THREE.Math.randFloatSpread(360);
+      this.phi = THREE.Math.randFloatSpread(360);
 
-      for (var j = 0; j < count; j++) {
-        var angle = j / count * Math.PI * 4;
-        var x = Math.sin(angle) * this.radius;
-        var y = Math.cos(angle) * this.radius;
-        var size = 1;
+      for (var j = 0; j < 2; j++) {
+        var x = -1 + Math.random() * 2;
+        var y = -1 + Math.random() * 2;
+        var z = -1 + Math.random() * 2;
+        var d = 1 / Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2));
+        x *= d;
+        y *= d;
+        z *= d;
+        var size = Math.ceil(Math.random() * 10) + 1;
         var color = this.colors.white;
 
         this.particles.push(new _particle.Particle({
           group: this.particleGroup,
-          x: x,
-          y: y,
-          z: z,
+          x: x * 370,
+          y: y * 370,
+          z: z * 370,
           size: size,
           radius: this.radius,
-          angle: angle,
           color: color,
           opacity: 1
         }, this, this.loader));
@@ -72,23 +78,52 @@ var Animation = exports.Animation = function () {
         this.radius += this.radiusGrowth;
       }
     }
-    this.particleGroup.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI / 3));
-    this.particleGroup.position.y = 40;
+
     this.loader.scene.add(this.particleGroup);
   }
 
   _createClass(Animation, [{
     key: 'createLights',
     value: function createLights() {
-      this.pointLightOne = new THREE.PointLight(this.colors.blue, 2, 50, 1);
-      this.pointLightOne.position.set(0, 0, 0);
+      this.pointLightOne = new THREE.PointLight(this.colors.blue, 1.5, 100, 2);
+      this.pointLightOne.position.set(0, -810, 0);
+      this.pointHelperOne = new THREE.PointLightHelper(this.pointLightOne, 5);
 
-      this.pointLightTwo = new THREE.PointLight(this.colors.blue, 3, 100, 1);
-      this.pointLightTwo.position.set(0, -80, 0);
+      this.pointLightTwo = new THREE.PointLight(this.colors.blue, 1.5, 80, 2);
+      this.pointLightTwo.position.set(-410, 10, 0);
+      this.pointHelperTwo = new THREE.PointLightHelper(this.pointLightTwo, 5);
 
-      this.ambient = new THREE.AmbientLight(this.colors.white, 1);
+      this.pointLightThree = new THREE.PointLight(this.colors.blue, 2.5, 100, 2);
+      this.pointLightThree.position.set(0, 0, -560);
+      this.pointHelperThree = new THREE.PointLightHelper(this.pointLightThree, 5);
 
-      this.loader.scene.add(this.pointLightOne, this.pointLightTwo, this.ambient);
+      this.pointLightFour = new THREE.PointLight(this.colors.white, 3, 500, 2);
+      this.pointLightFour.position.set(-150, 300, 150);
+
+      this.ambient = new THREE.AmbientLight(this.colors.white, .1);
+
+      this.loader.scene.add(this.lightsPivot, this.pointLightOne, this.pointLightTwo, this.pointLightThree, this.pointLightFour, this.ambient);
+    }
+  }, {
+    key: 'updateLights',
+    value: function updateLights() {
+      // this.lightsPivot.add(this.pointLightOne, this.pointLightTwo);
+      this.lightsPivot.rotation.y += 0.01;
+      this.lightsPivot.rotation.z += 0.005;
+      this.lightsPivot.rotation.x += 0.001;
+      this.pointLightOne.position.y += 1;
+      this.pointLightTwo.position.x += 1;
+      this.pointLightThree.position.z += 1;
+
+      if (this.pointLightThree.position.z > 200) {
+        this.pointLightThree.position.z = -450;
+      }
+      if (this.pointLightOne.position.y > 300) {
+        this.pointLightOne.position.y = -500;
+      }
+      if (this.pointLightTwo.position.x > 300) {
+        this.pointLightTwo.position.x = -510;
+      }
     }
   }, {
     key: 'updateParticles',
@@ -101,6 +136,10 @@ var Animation = exports.Animation = function () {
   }, {
     key: 'update',
     value: function update() {
+      this.updateLights();
+      this.particleGroup.rotation.x += 0.0001;
+      this.particleGroup.rotation.y += 0.0002;
+      this.particleGroup.rotation.z += 0.0003;
       this.updateParticles();
     }
   }]);
@@ -145,6 +184,7 @@ var Loader = exports.Loader = function () {
     };
 
     this.camera = null;
+    this.mouseX = 1;
 
     this.setupTime();
     this.setupScene();
@@ -180,7 +220,6 @@ var Loader = exports.Loader = function () {
       this.camera.position.x = 0;
       this.camera.position.y = 0;
       this.camera.position.z = 150;
-      this.camera.rotateX(0.25);
     }
   }, {
     key: 'setupRenderer',
@@ -339,7 +378,6 @@ var Particle = exports.Particle = function (_ParticleBase) {
 
     _this.loader = loader;
 
-    _this.angle = config.angle;
     _this.radiusBase = config.radius;
     _this.sizeBase = config.size;
     return _this;
@@ -347,13 +385,7 @@ var Particle = exports.Particle = function (_ParticleBase) {
 
   _createClass(Particle, [{
     key: 'update',
-    value: function update() {
-      this.angle -= Math.cos(this.loader.elapsedMilliseconds * 0.0025 - this.radiusBase * 0.15) * 0.02 * this.loader.deltaTimeNormal;
-      this.mesh.position.y = Math.cos(this.angle) * this.radiusBase / 3;
-      this.mesh.position.x = Math.cos(this.angle) * this.radiusBase / 3;
-      this.mesh.position.y = Math.sin(this.angle) * this.radiusBase / 3;
-      this.mesh.position.z = Math.cos(this.loader.elapsedMilliseconds * 0.0005 - this.radiusBase * 0.3) * 30;
-    }
+    value: function update() {}
   }]);
 
   return Particle;

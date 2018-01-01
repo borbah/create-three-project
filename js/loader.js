@@ -9,6 +9,7 @@ export class Loader {
     }
 
     this.camera = null;
+    this.mouseX = 1;
 
     this.setupTime();
     this.setupScene();
@@ -40,7 +41,6 @@ export class Loader {
     this.camera.position.x = 0;
     this.camera.position.y = 0;
     this.camera.position.z = 150;
-    this.camera.rotateX(0.25);
   }
 
   setupRenderer() {

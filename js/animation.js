@@ -7,11 +7,16 @@ export class Animation {
 
     this.colors = {
       white: 0xd8d0d1,
-      blue: 0x68c3c0,
+      blue: 0xf49542,
     };
 
     // Add lights to the scene
+    this.pointLightOne = null;
+    this.pointLightTwo = null;
+    this.lightsPivot = new THREE.Group();
     this.createLights();
+
+
 
     // Set basic geometry variables for particles
     this.sphereGeometry = new THREE.SphereBufferGeometry(1, 16, 16);
@@ -21,31 +26,34 @@ export class Animation {
     // Set base for particles
     this.particles = [];
     this.particleGroup = new THREE.Object3D();
-    this.particleGroup.scale.set(0.001, 0.001, 0.001);
+    this.particleGroup.scale.set(0.1, 0.1, 0.1);
 
-    this.rings = 8;
+    this.count = 800;
     this.radius = 0;
     this.radiusGrowth = .2;
 
-    for(let i = 0; i < this.rings; i++) {
-      let count = i === 0 ? 1 : 1 + Math.ceil(i * 20);
-      let z = 0;
+    for(let i = 0; i < this.count; i++) {
+      this.theta = THREE.Math.randFloatSpread(360);
+      this.phi = THREE.Math.randFloatSpread(360);
 
-      for(let j = 0; j < count; j++) {
-        let angle = (j / count) * Math.PI * 4;
-        let x = Math.sin(angle) * this.radius;
-        let y = Math.cos(angle) * this.radius;
-        let size = 1;
+      for (let j = 0; j < 2; j++) {
+        let x = -1 + Math.random() * 2;
+        let y = -1 + Math.random() * 2;
+        let z = -1 + Math.random() * 2;
+        let d = 1 / Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2));
+        x *= d;
+        y *= d;
+        z *= d;
+        let size = Math.ceil(Math.random() * 10) + 1;
         let color = this.colors.white;
 
         this.particles.push(new Particle({
           group: this.particleGroup,
-          x: x,
-          y: y,
-          z: z,
+          x: x * 370,
+          y: y * 370,
+          z: z * 370,
           size: size,
           radius: this.radius,
-          angle: angle,
           color: color,
           opacity: 1,
         }, this, this.loader));
@@ -53,21 +61,56 @@ export class Animation {
         this.radius += this.radiusGrowth;
       }
     }
-    this.particleGroup.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI/3));
-    this.particleGroup.position.y = 40;
+
     this.loader.scene.add(this.particleGroup);
   }
 
   createLights() {
-    this.pointLightOne = new THREE.PointLight(this.colors.blue, 2, 50, 1);
-    this.pointLightOne.position.set(0, 0, 0);
+    this.pointLightOne = new THREE.PointLight(this.colors.blue, 1.5, 100, 2);
+    this.pointLightOne.position.set(0, -810, 0);
+    this.pointHelperOne = new THREE.PointLightHelper(this.pointLightOne, 5);
 
-    this.pointLightTwo = new THREE.PointLight(this.colors.blue, 3, 100, 1);
-    this.pointLightTwo.position.set(0, -80, 0);
+    this.pointLightTwo = new THREE.PointLight(this.colors.blue, 1.5, 80, 2);
+    this.pointLightTwo.position.set(-410, 10, 0);
+    this.pointHelperTwo = new THREE.PointLightHelper(this.pointLightTwo, 5);
 
-    this.ambient = new THREE.AmbientLight(this.colors.white, 1);
+    this.pointLightThree = new THREE.PointLight(this.colors.blue, 2.5, 100, 2);
+    this.pointLightThree.position.set(0, 0, -560);
+    this.pointHelperThree = new THREE.PointLightHelper(this.pointLightThree, 5);
 
-    this.loader.scene.add(this.pointLightOne, this.pointLightTwo, this.ambient);
+    this.pointLightFour = new THREE.PointLight(this.colors.white, 3, 500, 2);
+    this.pointLightFour.position.set(-150, 300, 150);
+
+    this.ambient = new THREE.AmbientLight(this.colors.white, .1);
+
+    this.loader.scene.add(
+      this.lightsPivot,
+      this.pointLightOne,
+      this.pointLightTwo,
+      this.pointLightThree,
+      this.pointLightFour,
+      this.ambient
+    );
+  }
+
+  updateLights() {
+    // this.lightsPivot.add(this.pointLightOne, this.pointLightTwo);
+    this.lightsPivot.rotation.y += 0.01;
+    this.lightsPivot.rotation.z += 0.005;
+    this.lightsPivot.rotation.x += 0.001;
+    this.pointLightOne.position.y += 1;
+    this.pointLightTwo.position.x += 1;
+    this.pointLightThree.position.z += 1;
+
+    if(this.pointLightThree.position.z > 200) {
+      this.pointLightThree.position.z = -450;
+    }
+    if(this.pointLightOne.position.y > 300) {
+      this.pointLightOne.position.y = -500;
+    }
+    if(this.pointLightTwo.position.x > 300) {
+      this.pointLightTwo.position.x = -510;
+    }
   }
 
   updateParticles() {
@@ -78,6 +121,10 @@ export class Animation {
   }
 
   update() {
+    this.updateLights();
+    this.particleGroup.rotation.x += 0.0001;
+    this.particleGroup.rotation.y += 0.0002;
+    this.particleGroup.rotation.z += 0.0003;
     this.updateParticles();
   }
 
