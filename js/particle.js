@@ -5,12 +5,16 @@ export class Particle extends ParticleBase {
     super(config, animation, loader);
     this.loader = loader;
 
+    this.xInitial = config.x;
+    this.yInitial = config.y;
+    this.zInitial = config.z;
     this.radiusBase = config.radius;
     this.sizeBase = config.size;
   }
 
-
   update() {
-
+    this.mesh.position.x = Math.sin(Date.now() * 0.00009) * this.xInitial;
+    this.mesh.position.y = Math.sin(Date.now() * 0.00009) * this.yInitial;
+    this.mesh.position.z = Math.sin(Date.now() * 0.00009) * this.zInitial;
   }
 }

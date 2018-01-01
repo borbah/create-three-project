@@ -26,7 +26,7 @@ var Animation = exports.Animation = function () {
 
     this.colors = {
       white: 0xd8d0d1,
-      blue: 0xf49542
+      blue: 0xd8d0d1
     };
 
     // Add lights to the scene
@@ -137,9 +137,9 @@ var Animation = exports.Animation = function () {
     key: 'update',
     value: function update() {
       this.updateLights();
-      this.particleGroup.rotation.x += 0.0001;
-      this.particleGroup.rotation.y += 0.0002;
-      this.particleGroup.rotation.z += 0.0003;
+      this.particleGroup.rotation.x += 0.0003;
+      this.particleGroup.rotation.y += 0.0005;
+      this.particleGroup.rotation.z += 0.0007;
       this.updateParticles();
     }
   }]);
@@ -378,6 +378,9 @@ var Particle = exports.Particle = function (_ParticleBase) {
 
     _this.loader = loader;
 
+    _this.xInitial = config.x;
+    _this.yInitial = config.y;
+    _this.zInitial = config.z;
     _this.radiusBase = config.radius;
     _this.sizeBase = config.size;
     return _this;
@@ -385,7 +388,11 @@ var Particle = exports.Particle = function (_ParticleBase) {
 
   _createClass(Particle, [{
     key: 'update',
-    value: function update() {}
+    value: function update() {
+      this.mesh.position.x = Math.sin(Date.now() * 0.00009) * this.xInitial;
+      this.mesh.position.y = Math.sin(Date.now() * 0.00009) * this.yInitial;
+      this.mesh.position.z = Math.sin(Date.now() * 0.00009) * this.zInitial;
+    }
   }]);
 
   return Particle;

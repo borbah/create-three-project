@@ -7,7 +7,7 @@ export class Animation {
 
     this.colors = {
       white: 0xd8d0d1,
-      blue: 0xf49542,
+      blue: 0xd8d0d1,
     };
 
     // Add lights to the scene
@@ -122,9 +122,9 @@ export class Animation {
 
   update() {
     this.updateLights();
-    this.particleGroup.rotation.x += 0.0001;
-    this.particleGroup.rotation.y += 0.0002;
-    this.particleGroup.rotation.z += 0.0003;
+    this.particleGroup.rotation.x += 0.0003;
+    this.particleGroup.rotation.y += 0.0005;
+    this.particleGroup.rotation.z += 0.0007;
     this.updateParticles();
   }
 
