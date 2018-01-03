@@ -19,7 +19,7 @@ export class Animation {
 
 
     // Set basic geometry variables for particles
-    this.sphereGeometry = new THREE.SphereBufferGeometry(1, 16, 16);
+    this.sphereGeometry = new THREE.SphereBufferGeometry(1, 25, 25);
     this.boxGeometry = new THREE.BoxBufferGeometry(1, 1, 1);
     this.center = new THREE.Vector3();
 
@@ -44,18 +44,19 @@ export class Animation {
         x *= d;
         y *= d;
         z *= d;
-        let size = Math.ceil(Math.random() * 10) + 1;
+        let size = Math.ceil(Math.random() * 12) + 7;
         let color = this.colors.white;
 
         this.particles.push(new Particle({
           group: this.particleGroup,
-          x: x * 370,
-          y: y * 370,
-          z: z * 370,
+          x: x * 40,
+          y: y * 40,
+          z: z * 40,
           size: size,
           radius: this.radius,
           color: color,
           opacity: 1,
+          initialSpeed: 0.0000001,
         }, this, this.loader));
 
         this.radius += this.radiusGrowth;
@@ -122,9 +123,9 @@ export class Animation {
 
   update() {
     this.updateLights();
-    this.particleGroup.rotation.x += 0.0003;
-    this.particleGroup.rotation.y += 0.0005;
-    this.particleGroup.rotation.z += 0.0007;
+    this.particleGroup.rotation.x += 0.0012;
+    this.particleGroup.rotation.y += 0.0020;
+    this.particleGroup.rotation.z += 0.0028;
     this.updateParticles();
   }
 

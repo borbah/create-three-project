@@ -36,7 +36,7 @@ var Animation = exports.Animation = function () {
     this.createLights();
 
     // Set basic geometry variables for particles
-    this.sphereGeometry = new THREE.SphereBufferGeometry(1, 16, 16);
+    this.sphereGeometry = new THREE.SphereBufferGeometry(1, 25, 25);
     this.boxGeometry = new THREE.BoxBufferGeometry(1, 1, 1);
     this.center = new THREE.Vector3();
 
@@ -61,18 +61,19 @@ var Animation = exports.Animation = function () {
         x *= d;
         y *= d;
         z *= d;
-        var size = Math.ceil(Math.random() * 10) + 1;
+        var size = Math.ceil(Math.random() * 12) + 7;
         var color = this.colors.white;
 
         this.particles.push(new _particle.Particle({
           group: this.particleGroup,
-          x: x * 370,
-          y: y * 370,
-          z: z * 370,
+          x: x * 40,
+          y: y * 40,
+          z: z * 40,
           size: size,
           radius: this.radius,
           color: color,
-          opacity: 1
+          opacity: 1,
+          initialSpeed: 0.0000001
         }, this, this.loader));
 
         this.radius += this.radiusGrowth;
@@ -137,9 +138,9 @@ var Animation = exports.Animation = function () {
     key: 'update',
     value: function update() {
       this.updateLights();
-      this.particleGroup.rotation.x += 0.0003;
-      this.particleGroup.rotation.y += 0.0005;
-      this.particleGroup.rotation.z += 0.0007;
+      this.particleGroup.rotation.x += 0.0012;
+      this.particleGroup.rotation.y += 0.0020;
+      this.particleGroup.rotation.z += 0.0028;
       this.updateParticles();
     }
   }]);
@@ -378,20 +379,46 @@ var Particle = exports.Particle = function (_ParticleBase) {
 
     _this.loader = loader;
 
+    _this.timer = 0;
+    _this.increment = true;
     _this.xInitial = config.x;
     _this.yInitial = config.y;
     _this.zInitial = config.z;
     _this.radiusBase = config.radius;
     _this.sizeBase = config.size;
+    _this.initialSpeed = config.initialSpeed;
     return _this;
   }
 
   _createClass(Particle, [{
+    key: 'easeInQuad',
+    value: function easeInQuad(initial) {
+      // t = current time, d = duration, b = initial position, c = change value
+      var t = this.loader.elapsedMilliseconds;
+      var d = 40000;
+      var b = initial;
+      var c = Math.sin(Date.now() * 0.00009);
+      t /= d;
+      return c * t * t + b;
+    }
+  }, {
     key: 'update',
     value: function update() {
-      this.mesh.position.x = Math.sin(Date.now() * 0.00009) * this.xInitial;
-      this.mesh.position.y = Math.sin(Date.now() * 0.00009) * this.yInitial;
-      this.mesh.position.z = Math.sin(Date.now() * 0.00009) * this.zInitial;
+      this.timer += 0.1;
+      if (this.timer > 200) {
+        this.increment = !this.increment;
+        this.timer = 0;
+      }
+
+      if (this.increment) {
+        this.mesh.position.x += this.easeInQuad(this.xInitial) * 0.009;
+        this.mesh.position.y += this.easeInQuad(this.yInitial) * 0.009;
+        this.mesh.position.z += this.easeInQuad(this.zInitial) * 0.009;
+      } else {
+        this.mesh.position.x -= this.easeInQuad(this.xInitial) * 0.009;
+        this.mesh.position.y -= this.easeInQuad(this.yInitial) * 0.009;
+        this.mesh.position.z -= this.easeInQuad(this.zInitial) * 0.009;
+      }
     }
   }]);
 
