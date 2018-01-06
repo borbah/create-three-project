@@ -25,8 +25,7 @@ var Animation = exports.Animation = function () {
     this.loader = loader;
 
     this.colors = {
-      white: 0xd8d0d1,
-      blue: 0xd8d0d1
+      white: 0xd8d0d1
     };
 
     // Add lights to the scene
@@ -86,15 +85,15 @@ var Animation = exports.Animation = function () {
   _createClass(Animation, [{
     key: 'createLights',
     value: function createLights() {
-      this.pointLightOne = new THREE.PointLight(this.colors.blue, 1.5, 100, 2);
+      this.pointLightOne = new THREE.PointLight(this.colors.white, 1.5, 100, 2);
       this.pointLightOne.position.set(0, -810, 0);
       this.pointHelperOne = new THREE.PointLightHelper(this.pointLightOne, 5);
 
-      this.pointLightTwo = new THREE.PointLight(this.colors.blue, 1.5, 80, 2);
+      this.pointLightTwo = new THREE.PointLight(this.colors.white, 1.5, 80, 2);
       this.pointLightTwo.position.set(-410, 10, 0);
       this.pointHelperTwo = new THREE.PointLightHelper(this.pointLightTwo, 5);
 
-      this.pointLightThree = new THREE.PointLight(this.colors.blue, 2.5, 100, 2);
+      this.pointLightThree = new THREE.PointLight(this.colors.white, 2.5, 100, 2);
       this.pointLightThree.position.set(0, 0, -560);
       this.pointHelperThree = new THREE.PointLightHelper(this.pointLightThree, 5);
 
@@ -108,10 +107,6 @@ var Animation = exports.Animation = function () {
   }, {
     key: 'updateLights',
     value: function updateLights() {
-      // this.lightsPivot.add(this.pointLightOne, this.pointLightTwo);
-      this.lightsPivot.rotation.y += 0.01;
-      this.lightsPivot.rotation.z += 0.005;
-      this.lightsPivot.rotation.x += 0.001;
       this.pointLightOne.position.y += 1;
       this.pointLightTwo.position.x += 1;
       this.pointLightThree.position.z += 1;
@@ -183,9 +178,6 @@ var Loader = exports.Loader = function () {
       html: document.documentElement,
       container: document.querySelector('.app')
     };
-
-    this.camera = null;
-    this.mouseX = 1;
 
     this.setupTime();
     this.setupScene();
@@ -394,6 +386,7 @@ var Particle = exports.Particle = function (_ParticleBase) {
     key: 'easeInQuad',
     value: function easeInQuad(initial) {
       // t = current time, d = duration, b = initial position, c = change value
+      // http://gizma.com/easing/#quad2
       var t = this.loader.elapsedMilliseconds;
       var d = 40000;
       var b = initial;

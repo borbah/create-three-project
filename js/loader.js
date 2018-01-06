@@ -8,9 +8,6 @@ export class Loader {
       container: document.querySelector('.app'),
     }
 
-    this.camera = null;
-    this.mouseX = 1;
-
     this.setupTime();
     this.setupScene();
     this.setupCamera();

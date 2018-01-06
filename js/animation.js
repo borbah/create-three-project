@@ -7,7 +7,6 @@ export class Animation {
 
     this.colors = {
       white: 0xd8d0d1,
-      blue: 0xd8d0d1,
     };
 
     // Add lights to the scene
@@ -67,15 +66,15 @@ export class Animation {
   }
 
   createLights() {
-    this.pointLightOne = new THREE.PointLight(this.colors.blue, 1.5, 100, 2);
+    this.pointLightOne = new THREE.PointLight(this.colors.white, 1.5, 100, 2);
     this.pointLightOne.position.set(0, -810, 0);
     this.pointHelperOne = new THREE.PointLightHelper(this.pointLightOne, 5);
 
-    this.pointLightTwo = new THREE.PointLight(this.colors.blue, 1.5, 80, 2);
+    this.pointLightTwo = new THREE.PointLight(this.colors.white, 1.5, 80, 2);
     this.pointLightTwo.position.set(-410, 10, 0);
     this.pointHelperTwo = new THREE.PointLightHelper(this.pointLightTwo, 5);
 
-    this.pointLightThree = new THREE.PointLight(this.colors.blue, 2.5, 100, 2);
+    this.pointLightThree = new THREE.PointLight(this.colors.white, 2.5, 100, 2);
     this.pointLightThree.position.set(0, 0, -560);
     this.pointHelperThree = new THREE.PointLightHelper(this.pointLightThree, 5);
 
@@ -95,10 +94,6 @@ export class Animation {
   }
 
   updateLights() {
-    // this.lightsPivot.add(this.pointLightOne, this.pointLightTwo);
-    this.lightsPivot.rotation.y += 0.01;
-    this.lightsPivot.rotation.z += 0.005;
-    this.lightsPivot.rotation.x += 0.001;
     this.pointLightOne.position.y += 1;
     this.pointLightTwo.position.x += 1;
     this.pointLightThree.position.z += 1;
